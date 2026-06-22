@@ -1,0 +1,19 @@
+id: proto-20260622-fishing-calendar-tide-times-676749
+status: queued
+app_store_id: "414676749"
+country_code: GB
+source_name: Fishing Calendar & Tide Times
+developer_name: TOP APP d.o.o.
+category_name: Weather
+score: 75.4
+source_summary: 'GB / Weather / #80 (+12); $10K revenue est.; 1.0K downloads est.; sources: gainers'
+product_angle: Use Fishing Calendar & Tide Times as a signal for a specific forecast niche, not as another broad weather app.
+mvp_scope: Pick one narrow weather job, add widgets/alerts/share cards, and test a yearly subscription only if the niche is defensible.
+marketing_strategy: 'UGC: niche outdoor/local creators only, not generic weather; show one alert/widget saving a real plan; test region-specific creators and weather-community pages.'
+implementation_resources: SwiftUI/iOS native shell; Firebase Analytics + Crashlytics; RevenueCat + AppStoreCopilot; WeatherKit or Open-Meteo/Tomorrow.io; Core Location + geocoding; WidgetKit/Live Activities for alerts
+risks_json: '[]'
+reasons_json: '["Weather is a workable niche/category for a small mobile MVP.", "Top-gainer momentum shows fresh rank movement.", "Rank improved by 12 positions.", "App Store Tracker estimates useful revenue: $10K.", "Niche utility keywords: calendar.", "Several similar apps show revenue, so this is not a one-app anomaly."]'
+artifact_dir: /Users/missioncontrol/.mission-control/prototypes/runs/20260622T135511Z-fishing-calendar-tide-times-414676749
+thread_ts: "1782106468.008929"
+channel_id: C0B41T7FJJE
+queued_at: "2026-06-22T13:55:11Z"
