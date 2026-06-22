@@ -44,14 +44,17 @@ class _FishSignalAppState extends State<FishSignalApp> {
 
   ThemeData _buildTheme() {
     const scheme = ColorScheme.dark(
-      primary: FishColors.sea,
-      onPrimary: Colors.white,
+      primary: FishColors.seaBright,
+      onPrimary: FishColors.ink,
       secondary: FishColors.amber,
       onSecondary: FishColors.ink,
       surface: FishColors.inkSoft,
       onSurface: FishColors.mist,
     );
     final base = ThemeData.from(colorScheme: scheme, useMaterial3: true);
+    final stadium = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+    );
     return base.copyWith(
       scaffoldBackgroundColor: FishColors.ink,
       textTheme: base.textTheme.apply(
@@ -63,6 +66,31 @@ class _FishSignalAppState extends State<FishSignalApp> {
         color: FishColors.inkSoft,
         elevation: 0,
         margin: EdgeInsets.zero,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          shape: stadium,
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: stadium,
+          side: const BorderSide(color: FishColors.inkLine),
+          foregroundColor: FishColors.mist,
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: FishColors.inkSoft,
+        contentTextStyle: TextStyle(color: FishColors.mist),
       ),
     );
   }

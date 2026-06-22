@@ -4,19 +4,45 @@ import 'fixtures.dart';
 import 'models.dart';
 import 'score_engine.dart';
 
+/// FishSignal visual language: soft "golden-hour over water" palette.
+///
+/// The whole app reads as a calm twilight gradient; the only loud colour is the
+/// hero card, whose gradient *is* the verdict — warm gold means go now, lagoon
+/// teal means marginal, cool slate means wait. Surfaces are frosted glass with
+/// big radii and soft shadows, never hairline dashboard boxes.
 class FishColors {
-  static const ink = Color(0xFF0B1A24);
-  static const inkSoft = Color(0xFF12303F);
-  static const inkLine = Color(0xFF1E3B4D);
-  static const sea = Color(0xFF2E7D8C);
-  static const seaBright = Color(0xFF4FB3C4);
-  static const amber = Color(0xFFE8A33D);
-  static const amberDim = Color(0xFFB67E2C);
-  static const mist = Color(0xFFC9D8DF);
-  static const mistDim = Color(0xFF7F97A2);
-  static const go = Color(0xFF5BB98C);
-  static const maybe = Color(0xFFE8A33D);
-  static const wait = Color(0xFF7F97A2);
+  // Deep twilight base + raised surface fallbacks.
+  static const ink = Color(0xFF0A1B29);
+  static const inkSoft = Color(0xFF14334A);
+  static const inkLine = Color(0xFF274A60);
+
+  // Brand water tones.
+  static const sea = Color(0xFF2F8DA0);
+  static const seaBright = Color(0xFF63C7D6);
+
+  // Warm golden-hour accents.
+  static const amber = Color(0xFFFFB85C);
+  static const amberDim = Color(0xFFC78A3E);
+  static const coral = Color(0xFFFF8C66);
+  static const gold = Color(0xFFFFD27A);
+
+  // Text.
+  static const mist = Color(0xFFE9F2F6);
+  static const mistDim = Color(0xFF9DB6C3);
+
+  // Verdict tones (used for small accents / week ranking).
+  static const go = Color(0xFF5FD49B);
+  static const maybe = Color(0xFFFFB85C);
+  static const wait = Color(0xFF8AA6B7);
+
+  // App background mesh (top -> bottom).
+  static const List<Color> bgGradient = [
+    Color(0xFF0A1B29),
+    Color(0xFF112E40),
+    Color(0xFF0B2333),
+  ];
+
+  static const shadow = Color(0x66000813);
 
   static Color forVerdict(BiteVerdict v) {
     switch (v) {
@@ -28,6 +54,22 @@ class FishColors {
         return wait;
     }
   }
+
+  /// The soft hero gradient that carries the verdict at a glance.
+  static List<Color> heroGradient(BiteVerdict v) {
+    switch (v) {
+      case BiteVerdict.go:
+        return const [Color(0xFFFFA85A), Color(0xFFFFC76C), Color(0xFFFFB347)];
+      case BiteVerdict.maybe:
+        return const [Color(0xFF2E9FB3), Color(0xFF5BC9C3), Color(0xFF3FB0AE)];
+      case BiteVerdict.wait:
+        return const [Color(0xFF3C5A70), Color(0xFF5C7F95), Color(0xFF45657C)];
+    }
+  }
+
+  /// Readable foreground colour to lay over the hero gradient.
+  static Color onHero(BiteVerdict v) =>
+      v == BiteVerdict.go ? const Color(0xFF0A2230) : Colors.white;
 }
 
 class AppState extends ChangeNotifier {
