@@ -48,106 +48,109 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final buttonText = _page == 3 ? 'Show my window' : 'Continue';
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-              child: Row(
-                children: const [
-                  _BrandLockup(),
-                  Spacer(),
-                  _MockChip(text: 'prototype data'),
-                ],
+      body: _AppBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+                child: Row(
+                  children: const [
+                    _BrandLockup(),
+                    Spacer(),
+                    _MockChip(text: 'prototype data'),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: PageView(
-                controller: _controller,
-                onPageChanged: (page) => setState(() => _page = page),
-                children: [
-                  _OnboardingPanel(
-                    eyebrow: 'Fishing window forecast',
-                    title: 'Know your best two hours before you load the car.',
-                    body:
-                        'FishSignal combines pressure trend, tide movement, wind and solunar periods into one go / wait call for your mark.',
-                    child: const _InstrumentPreview(),
-                  ),
-                  _OnboardingPanel(
-                    eyebrow: 'Water type',
-                    title: 'Tune the score to how you fish.',
-                    body:
-                        'Tidal marks lean harder on moving water. Inland marks keep pressure and solunar drivers in front.',
-                    child: Column(
-                      children: WaterType.values.map((type) {
-                        return _ChoiceTile(
-                          title: type.label,
-                          subtitle: type.blurb,
-                          selected: _waterType == type,
-                          onTap: () => setState(() => _waterType = type),
-                        );
-                      }).toList(),
+              Expanded(
+                child: PageView(
+                  controller: _controller,
+                  onPageChanged: (page) => setState(() => _page = page),
+                  children: [
+                    _OnboardingPanel(
+                      eyebrow: 'Fishing window forecast',
+                      title:
+                          'Know your best two hours before you load the car.',
+                      body:
+                          'FishSignal combines pressure trend, tide movement, wind and solunar periods into one go / wait call for your mark.',
+                      child: const _InstrumentPreview(),
                     ),
-                  ),
-                  _OnboardingPanel(
-                    eyebrow: 'Home mark',
-                    title: 'Pick the spot you actually plan around.',
-                    body:
-                        'The prototype starts with local sample marks so Today, Week and Spots are inspectable immediately.',
-                    child: Column(
-                      children: state.spots.map((spot) {
-                        return _ChoiceTile(
-                          title: spot.name,
-                          subtitle: '${spot.area} - ${spot.waterType.label}',
-                          selected: _spotId == spot.id,
-                          onTap: () => setState(() => _spotId = spot.id),
-                        );
-                      }).toList(),
+                    _OnboardingPanel(
+                      eyebrow: 'Water type',
+                      title: 'Tune the score to how you fish.',
+                      body:
+                          'Tidal marks lean harder on moving water. Inland marks keep pressure and solunar drivers in front.',
+                      child: Column(
+                        children: WaterType.values.map((type) {
+                          return _ChoiceTile(
+                            title: type.label,
+                            subtitle: type.blurb,
+                            selected: _waterType == type,
+                            onTap: () => setState(() => _waterType = type),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
-                  _OnboardingPanel(
-                    eyebrow: 'Window alert',
-                    title: 'Decide before the tide is already gone.',
-                    body:
-                        'Alerts are a facade in this prototype. The product intent is a one-hour nudge before the best window opens.',
-                    child: _Surface(
-                      child: SwitchListTile(
-                        value: _alerts,
-                        onChanged: (value) => setState(() => _alerts = value),
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Alert me one hour before'),
-                        subtitle: const Text(
-                          'Prototype only - no real notification is scheduled.',
+                    _OnboardingPanel(
+                      eyebrow: 'Home mark',
+                      title: 'Pick the spot you actually plan around.',
+                      body:
+                          'The prototype starts with local sample marks so Today, Week and Spots are inspectable immediately.',
+                      child: Column(
+                        children: state.spots.map((spot) {
+                          return _ChoiceTile(
+                            title: spot.name,
+                            subtitle: '${spot.area} - ${spot.waterType.label}',
+                            selected: _spotId == spot.id,
+                            onTap: () => setState(() => _spotId = spot.id),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    _OnboardingPanel(
+                      eyebrow: 'Window alert',
+                      title: 'Decide before the tide is already gone.',
+                      body:
+                          'Alerts are a facade in this prototype. The product intent is a one-hour nudge before the best window opens.',
+                      child: _Surface(
+                        child: SwitchListTile(
+                          value: _alerts,
+                          onChanged: (value) => setState(() => _alerts = value),
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Alert me one hour before'),
+                          subtitle: const Text(
+                            'Prototype only - no real notification is scheduled.',
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      4,
-                      (i) => _PageDot(active: i == _page),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        4,
+                        (i) => _PageDot(active: i == _page),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => _next(state),
-                      child: Text(buttonText),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => _next(state),
+                        child: Text(buttonText),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -173,27 +176,62 @@ class _HomeShellState extends State<HomeShell> {
       const SettingsScreen(),
     ];
     return Scaffold(
-      body: SafeArea(child: pages[_index]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        backgroundColor: FishColors.inkSoft,
-        indicatorColor: FishColors.sea.withValues(alpha: 0.22),
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.speed_outlined),
-            label: 'Today',
+      body: _AppBackground(
+        child: SafeArea(bottom: false, child: pages[_index]),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: FishColors.ink.withValues(alpha: 0.86),
+          border: Border(
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month),
-            label: 'Week',
+        ),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            backgroundColor: Colors.transparent,
+            indicatorColor: FishColors.seaBright.withValues(alpha: 0.20),
+            labelTextStyle: WidgetStateProperty.all(
+              const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: FishColors.mist,
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.place_outlined),
-            label: 'Spots',
+          child: NavigationBar(
+            selectedIndex: _index,
+            height: 66,
+            elevation: 0,
+            onDestinationSelected: (value) => setState(() => _index = value),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.speed_outlined, color: FishColors.seaBright),
+                label: 'Today',
+              ),
+              NavigationDestination(
+                icon: Icon(
+                  Icons.calendar_today_outlined,
+                  color: FishColors.mistDim,
+                ),
+                selectedIcon: Icon(
+                  Icons.calendar_today,
+                  color: FishColors.seaBright,
+                ),
+                label: 'Week',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.place_outlined, color: FishColors.mistDim),
+                selectedIcon: Icon(Icons.place, color: FishColors.seaBright),
+                label: 'Spots',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.tune, color: FishColors.mistDim),
+                selectedIcon: Icon(Icons.tune, color: FishColors.seaBright),
+                label: 'More',
+              ),
+            ],
           ),
-          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
-        ],
+        ),
       ),
     );
   }
@@ -221,81 +259,37 @@ class TodayScreen extends StatelessWidget {
       orElse: () => score.hourScores.first,
     );
 
-    return _PageFrame(
-      title: 'FishSignal',
-      subtitle: '${spot.name} - ${spot.area}',
-      trailing: const _MockChip(text: 'mock forecast'),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-        children: [
-          _ScoreHero(score: score, verdict: verdict),
-          const SizedBox(height: 16),
-          _Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SectionTitle(
-                  label: 'Best window',
-                  action: score.bestWindow.rangeLabel,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  verdict.advice,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: bestHour.contributions
-                      .map((c) => _DriverPill(contribution: c))
-                      .toList(),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => WindowDetailScreen(
-                                spot: spot,
-                                dayScore: score,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.open_in_new),
-                        label: const Text('Open window'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    IconButton.filledTonal(
-                      tooltip: 'Toggle alert facade',
-                      onPressed: () => state.toggleAlert(spot.id),
-                      icon: Icon(
-                        spot.alertEnabled
-                            ? Icons.notifications_active
-                            : Icons.notifications_outlined,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _Timeline(hourScores: score.hourScores, window: score.bestWindow),
-          const SizedBox(height: 16),
-          const _Surface(
-            child: Text(
-              'All weather, pressure, tide and solunar values are local fixtures. No live forecast or marine-safety data is connected yet.',
-              style: TextStyle(color: FishColors.mistDim, height: 1.35),
-            ),
-          ),
-        ],
-      ),
+    void openWindow() {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => WindowDetailScreen(spot: spot, dayScore: score),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
+      children: [
+        _TodayHeader(spot: spot),
+        const SizedBox(height: 18),
+        _BiteHero(
+          score: score,
+          verdict: verdict,
+          alertOn: spot.alertEnabled,
+          onOpen: openWindow,
+          onAlert: () => state.toggleAlert(spot.id),
+        ),
+        const SizedBox(height: 18),
+        _SoftLabel(text: "What's driving it"),
+        const SizedBox(height: 10),
+        _DriverGrid(contributions: bestHour.contributions),
+        const SizedBox(height: 18),
+        _SoftLabel(text: 'How today unfolds'),
+        const SizedBox(height: 10),
+        _BiteCurveCard(hourScores: score.hourScores, window: score.bestWindow),
+        const SizedBox(height: 18),
+        const _DisclosureNote(),
+      ],
     );
   }
 }
@@ -322,100 +316,104 @@ class WindowDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Window detail'),
-        backgroundColor: FishColors.ink,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
-        children: [
-          _ScoreHero(score: dayScore, verdict: verdict),
-          const SizedBox(height: 16),
-          _Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SectionTitle(
-                  label: spot.name,
-                  action: dayScore.bestWindow.rangeLabel,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'This is a planning signal, not a catch guarantee. The score is highest where pressure, tide run, solunar period and wind line up.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: FishColors.mistDim,
-                    height: 1.35,
+      extendBodyBehindAppBar: false,
+      body: _AppBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 28),
+          children: [
+            _ScoreHero(score: dayScore, verdict: verdict),
+            const SizedBox(height: 16),
+            _Surface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SectionTitle(
+                    label: spot.name,
+                    action: dayScore.bestWindow.rangeLabel,
                   ),
-                ),
-                const SizedBox(height: 16),
-                ...hour.contributions.map((c) => _ContributionRow(c: c)),
-              ],
+                  const SizedBox(height: 10),
+                  Text(
+                    'This is a planning signal, not a catch guarantee. The score is highest where pressure, tide run, solunar period and wind line up.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: FishColors.mistDim,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...hour.contributions.map((c) => _ContributionRow(c: c)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _SectionTitle(label: 'Session card'),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: FishColors.inkLine),
-                    color: FishColors.ink,
-                    borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            _Surface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _SectionTitle(label: 'Session card'),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: FishColors.inkLine),
+                      color: FishColors.ink,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          spot.name,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${dayScore.bestWindow.rangeLabel} - ${dayScore.rounded}/100 bite signal',
+                          style: const TextStyle(color: FishColors.amber),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Share facade only. Production would render this as an image card.',
+                          style: TextStyle(color: FishColors.mistDim),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 14),
+                  Row(
                     children: [
-                      Text(
-                        spot.name,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showFacade(context, 'Share card'),
+                          icon: const Icon(Icons.ios_share),
+                          label: const Text('Share'),
+                        ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${dayScore.bestWindow.rangeLabel} - ${dayScore.rounded}/100 bite signal',
-                        style: const TextStyle(color: FishColors.amber),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Share facade only. Production would render this as an image card.',
-                        style: TextStyle(color: FishColors.mistDim),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => state.toggleAlert(spot.id),
+                          icon: Icon(
+                            spot.alertEnabled
+                                ? Icons.notifications_active
+                                : Icons.notifications_outlined,
+                          ),
+                          label: Text(
+                            spot.alertEnabled ? 'Alert on' : 'Alert me',
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showFacade(context, 'Share card'),
-                        icon: const Icon(Icons.ios_share),
-                        label: const Text('Share'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => state.toggleAlert(spot.id),
-                        icon: Icon(
-                          spot.alertEnabled
-                              ? Icons.notifications_active
-                              : Icons.notifications_outlined,
-                        ),
-                        label: Text(
-                          spot.alertEnabled ? 'Alert on' : 'Alert me',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const _SafetyNotice(),
-        ],
+            const SizedBox(height: 16),
+            const _SafetyNotice(),
+          ],
+        ),
       ),
     );
   }
@@ -618,53 +616,56 @@ class PaywallScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FishSignal Pro'),
-        backgroundColor: FishColors.ink,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-        children: [
-          Text(
-            'Plan the week before the tide chooses for you.',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Prototype facade only - no RevenueCat, App Store or Play billing is connected.',
-            style: TextStyle(color: FishColors.mistDim, height: 1.35),
-          ),
-          const SizedBox(height: 18),
-          const _PlanTile(
-            title: 'Annual',
-            price: 'GBP 24.99 / year',
-            note: '7-day trial direction',
-            featured: true,
-          ),
-          const SizedBox(height: 10),
-          const _PlanTile(
-            title: 'Monthly',
-            price: 'GBP 4.99 / month',
-            note: 'Fallback option',
-          ),
-          const SizedBox(height: 10),
-          const _PlanTile(
-            title: 'Weekly',
-            price: 'GBP 1.99 / week',
-            note: 'Short trip planning',
-          ),
-          const SizedBox(height: 18),
-          FilledButton(
-            onPressed: () => _showFacade(context, 'Purchase facade only'),
-            child: const Text('Continue'),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () =>
-                _showFacade(context, 'Terms and Privacy placeholders'),
-            child: const Text('Terms and Privacy'),
-          ),
-        ],
+      body: _AppBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          children: [
+            Text(
+              'Plan the week before the tide chooses for you.',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Prototype facade only - no RevenueCat, App Store or Play billing is connected.',
+              style: TextStyle(color: FishColors.mistDim, height: 1.35),
+            ),
+            const SizedBox(height: 18),
+            const _PlanTile(
+              title: 'Annual',
+              price: 'GBP 24.99 / year',
+              note: '7-day trial direction',
+              featured: true,
+            ),
+            const SizedBox(height: 10),
+            const _PlanTile(
+              title: 'Monthly',
+              price: 'GBP 4.99 / month',
+              note: 'Fallback option',
+            ),
+            const SizedBox(height: 10),
+            const _PlanTile(
+              title: 'Weekly',
+              price: 'GBP 1.99 / week',
+              note: 'Short trip planning',
+            ),
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: () => _showFacade(context, 'Purchase facade only'),
+              child: const Text('Continue'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () =>
+                  _showFacade(context, 'Terms and Privacy placeholders'),
+              child: const Text('Terms and Privacy'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -784,7 +785,13 @@ class _InstrumentPreview extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              const _Gauge(score: 72, size: 118),
+              const _BiteDial(
+                score: 72,
+                size: 118,
+                arcColor: FishColors.amber,
+                trackColor: FishColors.inkLine,
+                textColor: FishColors.amber,
+              ),
               const SizedBox(width: 18),
               Expanded(
                 child: Column(
@@ -805,6 +812,8 @@ class _InstrumentPreview extends StatelessWidget {
   }
 }
 
+/// Reusable gradient hero panel: the verdict gradient is the background, with a
+/// tonal bite dial and the best-window time. Used on the window-detail screen.
 class _ScoreHero extends StatelessWidget {
   const _ScoreHero({required this.score, required this.verdict});
 
@@ -813,31 +822,38 @@ class _ScoreHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Surface(
-      padding: const EdgeInsets.all(18),
+    final fg = FishColors.onHero(verdict);
+    return _HeroSurface(
+      verdict: verdict,
       child: Row(
         children: [
-          _Gauge(score: score.rounded, size: 132),
+          _BiteDial(
+            score: score.rounded,
+            size: 116,
+            arcColor: fg,
+            trackColor: fg.withValues(alpha: 0.22),
+            textColor: fg,
+          ),
           const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StatusPill(
-                  text: verdict.headline,
-                  color: FishColors.forVerdict(verdict),
-                ),
+                _HeroChip(text: verdict.headline, fg: fg),
                 const SizedBox(height: 12),
                 Text(
                   score.bestWindow.rangeLabel,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: TextStyle(
+                    color: fg,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${score.forecast.weekdayLabel} ${score.forecast.dateLabel} - best 2-hour window',
-                  style: const TextStyle(color: FishColors.mistDim),
+                  '${score.forecast.weekdayLabel} ${score.forecast.dateLabel} · best 2-hour window',
+                  style: TextStyle(color: fg.withValues(alpha: 0.78)),
                 ),
               ],
             ),
@@ -848,8 +864,461 @@ class _ScoreHero extends StatelessWidget {
   }
 }
 
-class _Timeline extends StatelessWidget {
-  const _Timeline({required this.hourScores, required this.window});
+/// Today's full-bleed hero: the loudest moment in the app. Friendly read,
+/// big tonal dial, the best window, and the primary "Open window" action all
+/// sitting on the verdict gradient.
+class _BiteHero extends StatelessWidget {
+  const _BiteHero({
+    required this.score,
+    required this.verdict,
+    required this.alertOn,
+    required this.onOpen,
+    required this.onAlert,
+  });
+
+  final DayScore score;
+  final BiteVerdict verdict;
+  final bool alertOn;
+  final VoidCallback onOpen;
+  final VoidCallback onAlert;
+
+  String get _greeting {
+    switch (verdict) {
+      case BiteVerdict.go:
+        return 'The window is on — go fish it.';
+      case BiteVerdict.maybe:
+        return 'Fishable, if you time it right.';
+      case BiteVerdict.wait:
+        return 'Slow today — a better window is coming.';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = FishColors.onHero(verdict);
+    final dim = fg.withValues(alpha: 0.78);
+    return _HeroSurface(
+      verdict: verdict,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _HeroChip(text: verdict.headline.toUpperCase(), fg: fg),
+              const Spacer(),
+              Text(
+                '${score.forecast.weekdayLabel} ${score.forecast.dateLabel}',
+                style: TextStyle(color: dim, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _BiteDial(
+                score: score.rounded,
+                size: 132,
+                arcColor: fg,
+                trackColor: fg.withValues(alpha: 0.20),
+                textColor: fg,
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Best window',
+                      style: TextStyle(
+                        color: dim,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      score.bestWindow.rangeLabel,
+                      style: TextStyle(
+                        color: fg,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _greeting,
+                      style: TextStyle(
+                        color: dim,
+                        fontSize: 14.5,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onOpen,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: fg,
+                    foregroundColor: verdict == BiteVerdict.go
+                        ? Colors.white
+                        : _heroBase(verdict),
+                  ),
+                  icon: const Icon(Icons.north_east, size: 20),
+                  label: const Text('Open window'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              _HeroIconButton(active: alertOn, fg: fg, onTap: onAlert),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Deep base colour pulled from the verdict gradient, used as button label
+/// colour so text reads against the bright foreground fill.
+Color _heroBase(BiteVerdict v) => FishColors.heroGradient(v).last;
+
+/// The gradient surface shared by both heroes.
+class _HeroSurface extends StatelessWidget {
+  const _HeroSurface({
+    required this.verdict,
+    required this.child,
+    this.padding = const EdgeInsets.all(20),
+  });
+
+  final BiteVerdict verdict;
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = FishColors.heroGradient(verdict);
+    return Container(
+      width: double.infinity,
+      padding: padding,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withValues(alpha: 0.45),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({required this.text, required this.fg});
+
+  final String text;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: fg.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: fg,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroIconButton extends StatelessWidget {
+  const _HeroIconButton({
+    required this.active,
+    required this.fg,
+    required this.onTap,
+  });
+
+  final bool active;
+  final Color fg;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: fg.withValues(alpha: active ? 0.22 : 0.12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: SizedBox(
+          width: 54,
+          height: 54,
+          child: Icon(
+            active ? Icons.notifications_active : Icons.notifications_outlined,
+            color: fg,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gradient twilight backdrop the whole app floats on.
+class _AppBackground extends StatelessWidget {
+  const _AppBackground({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: FishColors.bgGradient,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Friendly Today header: greeting, the active mark, and the honesty chip.
+class _TodayHeader extends StatelessWidget {
+  const _TodayHeader({required this.spot});
+
+  final Spot spot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.place,
+                    size: 16,
+                    color: FishColors.seaBright,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      spot.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: FishColors.seaBright,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Your fishing window',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: _MockChip(text: 'mock forecast'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Quiet section label, lowercase-feel, used between cards.
+class _SoftLabel extends StatelessWidget {
+  const _SoftLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: FishColors.mist,
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+/// 2×2 grid of the four bite drivers, each a soft tile with an icon, the
+/// plain-language read, and a tonal strength bar from the score engine.
+class _DriverGrid extends StatelessWidget {
+  const _DriverGrid({required this.contributions});
+
+  final List<DriverContribution> contributions;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 12.0;
+        final tileWidth = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: contributions
+              .map(
+                (c) => SizedBox(
+                  width: tileWidth,
+                  child: _DriverTile(contribution: c),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _DriverTile extends StatelessWidget {
+  const _DriverTile({required this.contribution});
+
+  final DriverContribution contribution;
+
+  IconData get _icon {
+    switch (contribution.label) {
+      case 'Pressure':
+        return Icons.compress;
+      case 'Tide':
+        return Icons.waves;
+      case 'Wind':
+        return Icons.air;
+      case 'Solunar':
+        return Icons.nightlight_round;
+      default:
+        return Icons.tune;
+    }
+  }
+
+  Color get _accent {
+    final s = contribution.score01;
+    if (s >= 0.66) return FishColors.go;
+    if (s >= 0.4) return FishColors.amber;
+    return FishColors.wait;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Surface(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(_icon, size: 19, color: _accent),
+              ),
+              const Spacer(),
+              Text(
+                '${contribution.score01 >= 0.999 ? 100 : (contribution.score01 * 100).round()}',
+                style: TextStyle(
+                  color: _accent,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            contribution.label,
+            style: const TextStyle(
+              color: FishColors.mist,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: contribution.score01.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              color: _accent,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            contribution.detail,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: FishColors.mistDim,
+              fontSize: 12.5,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A smooth filled area chart of the day's hourly bite score, with the best
+/// window highlighted and its peak marked. This is the product mechanic made
+/// visible: you can *see* the day rise into its window and fall away.
+class _BiteCurveCard extends StatelessWidget {
+  const _BiteCurveCard({required this.hourScores, required this.window});
 
   final List<HourScore> hourScores;
   final BiteWindow window;
@@ -860,43 +1329,207 @@ class _Timeline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(label: '24-hour activity'),
-          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Text(
+                'Bite curve',
+                style: TextStyle(
+                  color: FishColors.mist,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                window.rangeLabel,
+                style: const TextStyle(
+                  color: FishColors.amber,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           SizedBox(
-            height: 72,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: hourScores.map((h) {
-                final inWindow =
-                    h.sample.hour >= window.startHour &&
-                    h.sample.hour < window.endHour;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                    child: Tooltip(
-                      message: '${h.sample.clockLabel}: ${h.rounded}',
-                      child: FractionallySizedBox(
-                        heightFactor: math.max(0.12, h.score / 100),
-                        alignment: Alignment.bottomCenter,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: inWindow
-                                ? FishColors.amber
-                                : FishColors.sea.withValues(alpha: 0.55),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            height: 96,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _BiteCurvePainter(
+                hourScores: hourScores,
+                window: window,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Bars show computed hourly signal from mocked drivers.',
-            style: TextStyle(color: FishColors.mistDim),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              _AxisLabel('12a'),
+              _AxisLabel('6a'),
+              _AxisLabel('12p'),
+              _AxisLabel('6p'),
+              _AxisLabel('12a'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Computed hour by hour from pressure, tide, wind and solunar — the gold band is your best two hours.',
+            style: TextStyle(
+              color: FishColors.mistDim.withValues(alpha: 0.95),
+              fontSize: 12.5,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AxisLabel extends StatelessWidget {
+  const _AxisLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(color: FishColors.mistDim, fontSize: 11),
+    );
+  }
+}
+
+class _BiteCurvePainter extends CustomPainter {
+  _BiteCurvePainter({required this.hourScores, required this.window});
+
+  final List<HourScore> hourScores;
+  final BiteWindow window;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (hourScores.isEmpty) return;
+    final n = hourScores.length;
+    double x(int i) => n == 1 ? 0.0 : size.width * i / (n - 1);
+    double y(double score) => size.height * (1 - (score / 100).clamp(0.0, 1.0));
+
+    // Smooth path through the points using simple Catmull-Rom-ish midpoints.
+    final pts = <Offset>[
+      for (var i = 0; i < n; i++) Offset(x(i), y(hourScores[i].score)),
+    ];
+
+    final line = Path()..moveTo(pts.first.dx, pts.first.dy);
+    for (var i = 0; i < pts.length - 1; i++) {
+      final p0 = pts[i];
+      final p1 = pts[i + 1];
+      final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+      line.quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
+    }
+    line.lineTo(pts.last.dx, pts.last.dy);
+
+    // Filled area under the curve.
+    final fill = Path.from(line)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            FishColors.seaBright.withValues(alpha: 0.40),
+            FishColors.seaBright.withValues(alpha: 0.02),
+          ],
+        ).createShader(Offset.zero & size),
+    );
+
+    // Highlight band for the best window.
+    final startI = hourScores.indexWhere(
+      (h) => h.sample.hour == window.startHour,
+    );
+    if (startI >= 0) {
+      final endI = math.min(
+        n - 1,
+        startI + (window.endHour - window.startHour),
+      );
+      final bandRect = Rect.fromLTRB(x(startI), 0, x(endI), size.height);
+      canvas.drawRect(
+        bandRect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              FishColors.amber.withValues(alpha: 0.28),
+              FishColors.amber.withValues(alpha: 0.04),
+            ],
+          ).createShader(bandRect),
+      );
+
+      // Peak dot at the window start (the headline hour).
+      final peak = Offset(x(startI), y(hourScores[startI].score));
+      canvas.drawCircle(peak, 6, Paint()..color = FishColors.amber);
+      canvas.drawCircle(
+        peak,
+        6,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..color = Colors.white.withValues(alpha: 0.9),
+      );
+    }
+
+    // The curve stroke on top.
+    canvas.drawPath(
+      line,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = FishColors.seaBright,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BiteCurvePainter old) =>
+      old.hourScores != hourScores || old.window != window;
+}
+
+/// Honest disclosure that the forecast is mocked.
+class _DisclosureNote extends StatelessWidget {
+  const _DisclosureNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 18,
+            color: FishColors.mistDim.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'All pressure, tide, wind and solunar values are local sample data. No live forecast or marine-safety service is connected yet.',
+              style: TextStyle(
+                color: FishColors.mistDim,
+                height: 1.35,
+                fontSize: 12.5,
+              ),
+            ),
           ),
         ],
       ),
@@ -961,51 +1594,106 @@ class _WeekCard extends StatelessWidget {
   }
 }
 
-class _Gauge extends StatelessWidget {
-  const _Gauge({required this.score, required this.size});
+/// A soft 270° dial showing the 0–100 bite score. Tonal by design so it sits
+/// elegantly on top of either the verdict gradient (hero) or a dark surface.
+class _BiteDial extends StatelessWidget {
+  const _BiteDial({
+    required this.score,
+    required this.size,
+    required this.arcColor,
+    required this.trackColor,
+    required this.textColor,
+  });
 
   final int score;
   final double size;
+  final Color arcColor;
+  final Color trackColor;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: CircularProgressIndicator(
-              value: score / 100,
-              strokeWidth: 10,
-              color: FishColors.amber,
-              backgroundColor: FishColors.inkLine,
-              strokeCap: StrokeCap.round,
-            ),
-          ),
-          Column(
+      child: CustomPaint(
+        painter: _BiteDialPainter(
+          progress: (score / 100).clamp(0.0, 1.0),
+          arcColor: arcColor,
+          trackColor: trackColor,
+        ),
+        child: Center(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '$score',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: TextStyle(
+                  fontSize: size * 0.34,
+                  height: 1.0,
                   fontWeight: FontWeight.w900,
-                  color: FishColors.amber,
+                  color: textColor,
                 ),
               ),
-              const Text(
-                'signal',
-                style: TextStyle(color: FishColors.mistDim, fontSize: 12),
+              const SizedBox(height: 2),
+              Text(
+                'BITE SCORE',
+                style: TextStyle(
+                  fontSize: size * 0.085,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: textColor.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _BiteDialPainter extends CustomPainter {
+  _BiteDialPainter({
+    required this.progress,
+    required this.arcColor,
+    required this.trackColor,
+  });
+
+  final double progress;
+  final Color arcColor;
+  final Color trackColor;
+
+  static const double _start = math.pi * 0.75; // 135°
+  static const double _sweep = math.pi * 1.5; // 270°
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = size.width * 0.085;
+    final rect =
+        Offset(stroke / 2, stroke / 2) &
+        Size(size.width - stroke, size.height - stroke);
+
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = trackColor;
+    canvas.drawArc(rect, _start, _sweep, false, track);
+
+    final arc = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = arcColor;
+    canvas.drawArc(rect, _start, _sweep * progress, false, arc);
+  }
+
+  @override
+  bool shouldRepaint(_BiteDialPainter old) =>
+      old.progress != progress ||
+      old.arcColor != arcColor ||
+      old.trackColor != trackColor;
 }
 
 class _ContributionRow extends StatelessWidget {
@@ -1110,10 +1798,13 @@ class _ChoiceTile extends StatelessWidget {
   }
 }
 
+/// Soft frosted card. The whole app is built from these — big radius, a faint
+/// top-light gradient, hairline of white instead of a hard border, and a low
+/// soft shadow so cards float over the twilight background.
 class _Surface extends StatelessWidget {
   const _Surface({
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(18),
   });
 
   final Widget child;
@@ -1125,9 +1816,23 @@ class _Surface extends StatelessWidget {
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: FishColors.inkSoft,
-        border: Border.all(color: FishColors.inkLine),
-        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.07),
+            Colors.white.withValues(alpha: 0.025),
+          ],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: FishColors.shadow,
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: child,
     );
@@ -1166,28 +1871,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _DriverPill extends StatelessWidget {
-  const _DriverPill({required this.contribution});
-
-  final DriverContribution contribution;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: FishColors.ink,
-        border: Border.all(color: FishColors.inkLine),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '${contribution.label} +${contribution.points.round()}',
-        style: const TextStyle(fontSize: 12, color: FishColors.mist),
-      ),
-    );
-  }
-}
-
 class _MockChip extends StatelessWidget {
   const _MockChip({required this.text});
 
@@ -1211,24 +1894,23 @@ class _MockChip extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.text, this.color = FishColors.seaBright});
+  const _StatusPill({required this.text});
 
   final String text;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        border: Border.all(color: color),
+        color: FishColors.seaBright.withValues(alpha: 0.16),
+        border: Border.all(color: FishColors.seaBright),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: color,
+        style: const TextStyle(
+          color: FishColors.seaBright,
           fontWeight: FontWeight.w800,
           fontSize: 12,
         ),
