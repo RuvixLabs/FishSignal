@@ -278,6 +278,24 @@ class ScoreEngine {
     );
   }
 
+  /// Find the best window that fits inside an available hour range. If the
+  /// range cannot contain a full window, fall back to the all-day best window.
+  BiteWindow bestWindowWithin(
+    List<HourScore> hours, {
+    required int startHour,
+    required int endHour,
+    int length = windowLength,
+  }) {
+    if (hours.isEmpty || endHour - startHour < length) {
+      return bestWindow(hours, length: length);
+    }
+    final candidates = hours
+        .where((h) => h.sample.hour >= startHour && h.sample.hour < endHour)
+        .toList(growable: false);
+    if (candidates.length < length) return bestWindow(hours, length: length);
+    return bestWindow(candidates, length: length);
+  }
+
   /// Score an entire day.
   DayScore scoreDay(DayForecast forecast, {required bool tideMatters}) {
     final hourScores = forecast.hours

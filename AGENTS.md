@@ -22,3 +22,8 @@
 ## Next Workflow
 	Use the shared app-idea-to-production skill before production implementation.
 Start from prototype state evidence, then deliberately add Firebase, RevenueCat, AppStoreCopilot, AppRefer, analytics, store assets, and release setup only when approved.
+
+## Current Product Loop
+- Approved UI baseline: soft rounded "Golden Hour" direction from PR #1.
+- Current proof loop: onboarding profile -> active fishing mark -> pressure/tide/wind/solunar bite score -> Today window -> session plan -> exact local alert/share preview -> Week/Spots follow-through.
+- Still local-only: no Firebase, RevenueCat, AppStoreCopilot, AppRefer, Gleap, analytics, live weather/tide provider, native notification scheduling, store setup, or credentials.

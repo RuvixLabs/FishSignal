@@ -41,6 +41,31 @@ void main() {
     expect(window.rounded, 85);
   });
 
+  test('bestWindowWithin respects the requested hour range', () {
+    HourSample sample(int hour) => HourSample(
+      hour: hour,
+      pressureHpa: 1010,
+      pressureTrend3h: 0,
+      tideState: TideState.flooding,
+      tideMovement: 0.5,
+      windKph: 12,
+      solunar: SolunarPeriod.none,
+    );
+
+    final hours = [
+      HourScore(sample: sample(5), score: 95, contributions: const []),
+      HourScore(sample: sample(6), score: 90, contributions: const []),
+      HourScore(sample: sample(17), score: 65, contributions: const []),
+      HourScore(sample: sample(18), score: 70, contributions: const []),
+    ];
+
+    final window = engine.bestWindowWithin(hours, startHour: 16, endHour: 22);
+
+    expect(window.startHour, 17);
+    expect(window.endHour, 19);
+    expect(window.rounded, 68);
+  });
+
   test('scoreHour returns named driver contributions', () {
     const sample = HourSample(
       hour: 6,
