@@ -17,6 +17,8 @@ List<Spot> seedSpots() => [
     name: 'Chesil Cove',
     area: 'Portland, Dorset',
     waterType: WaterType.saltShore,
+    target: 'Bass, wrasse and mackerel',
+    accessNote: 'Rock mark with a tide-led bite',
     isHomeMark: true,
     alertEnabled: true,
   ),
@@ -25,12 +27,16 @@ List<Spot> seedSpots() => [
     name: 'Poole Harbour run',
     area: 'Poole, Dorset',
     waterType: WaterType.saltBoat,
+    target: 'Flounder and school bass',
+    accessNote: 'Sheltered harbour water',
   ),
   Spot(
     id: 'spot-kennet',
     name: 'River Kennet — willows',
     area: 'Newbury, Berkshire',
     waterType: WaterType.freshwater,
+    target: 'Chub, perch and roach',
+    accessNote: 'Inland swim where pressure matters more than tide',
   ),
 ];
 

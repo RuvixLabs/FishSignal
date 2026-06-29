@@ -80,9 +80,11 @@ class AppState extends ChangeNotifier {
 
   bool onboardingComplete = false;
   WaterType waterType = WaterType.saltShore;
+  TripRhythm tripRhythm = TripRhythm.dawn;
   bool alertIntent = false;
 
   final List<Spot> spots = seedSpots();
+  final List<SavedWindowAlert> savedAlerts = [];
   String? activeSpotId;
   final DateTime anchor = DateTime(2026, 6, 22);
 
@@ -96,15 +98,30 @@ class AppState extends ChangeNotifier {
   void completeOnboarding({
     required WaterType waterType,
     required String homeSpotId,
+    required TripRhythm tripRhythm,
     required bool alertIntent,
   }) {
     this.waterType = waterType;
+    this.tripRhythm = tripRhythm;
     this.alertIntent = alertIntent;
     for (final s in spots) {
       s.isHomeMark = s.id == homeSpotId;
+      if (s.id == homeSpotId) {
+        s.waterType = waterType;
+        s.alertEnabled = alertIntent;
+      }
     }
     activeSpotId = homeSpotId;
     onboardingComplete = true;
+    if (alertIntent) {
+      final spot = activeSpot;
+      if (spot != null) saveWindowAlert(spot, todayFor(spot), notify: false);
+    }
+    notifyListeners();
+  }
+
+  void setTripRhythm(TripRhythm rhythm) {
+    tripRhythm = rhythm;
     notifyListeners();
   }
 
@@ -145,19 +162,71 @@ class AppState extends ChangeNotifier {
     for (final spot in spots) {
       if (spot.id == id) {
         spot.alertEnabled = !spot.alertEnabled;
+        if (!spot.alertEnabled) {
+          savedAlerts.removeWhere((alert) => alert.spotId == id);
+        }
         notifyListeners();
         return;
       }
     }
   }
 
+  SavedWindowAlert? alertFor(String spotId, DayScore score) {
+    final date = score.forecast.date;
+    for (final alert in savedAlerts) {
+      if (alert.spotId == spotId &&
+          alert.date.year == date.year &&
+          alert.date.month == date.month &&
+          alert.date.day == date.day &&
+          alert.startHour == score.bestWindow.startHour) {
+        return alert;
+      }
+    }
+    return null;
+  }
+
+  SavedWindowAlert saveWindowAlert(
+    Spot spot,
+    DayScore score, {
+    bool notify = true,
+  }) {
+    savedAlerts.removeWhere((alert) => alert.id == _alertId(spot, score));
+    final alert = SavedWindowAlert(
+      spotId: spot.id,
+      spotName: spot.name,
+      date: score.forecast.date,
+      startHour: score.bestWindow.startHour,
+      endHour: score.bestWindow.endHour,
+      score: score.rounded,
+    );
+    savedAlerts.add(alert);
+    spot.alertEnabled = true;
+    if (notify) notifyListeners();
+    return alert;
+  }
+
+  bool toggleWindowAlert(Spot spot, DayScore score) {
+    final existing = alertFor(spot.id, score);
+    if (existing != null) {
+      savedAlerts.removeWhere((alert) => alert.id == existing.id);
+      spot.alertEnabled = savedAlerts.any((alert) => alert.spotId == spot.id);
+      notifyListeners();
+      return false;
+    }
+    saveWindowAlert(spot, score);
+    return true;
+  }
+
   void addSampleSpot() {
     final next = spots.length + 1;
+    final template = _sampleTemplates[(next - 1) % _sampleTemplates.length];
     final spot = Spot(
       id: 'spot-new-$next',
-      name: 'New mark $next',
-      area: 'Prototype fixture',
-      waterType: waterType,
+      name: template.name,
+      area: template.area,
+      waterType: template.waterType,
+      target: template.target,
+      accessNote: template.accessNote,
     );
     spots.add(spot);
     activeSpotId = spot.id;
@@ -170,7 +239,132 @@ class AppState extends ChangeNotifier {
   }
 
   DayScore todayFor(Spot spot) => weekFor(spot).first;
+
+  TripRecommendation recommendationFor(Spot spot) {
+    final day = todayFor(spot);
+    final rhythmWindow = tripRhythm.allDay
+        ? day.bestWindow
+        : engine.bestWindowWithin(
+            day.hourScores,
+            startHour: tripRhythm.startHour,
+            endHour: tripRhythm.endHour,
+          );
+    return TripRecommendation(
+      spot: spot,
+      day: day,
+      rhythm: tripRhythm,
+      rhythmWindow: rhythmWindow,
+    );
+  }
+
+  List<String> sessionChecklist(Spot spot, DayScore score) {
+    final hour = score.hourScores.firstWhere(
+      (h) => h.sample.hour == score.bestWindow.startHour,
+      orElse: () => score.hourScores.first,
+    );
+    final topDriver = [...hour.contributions]
+      ..sort((a, b) => b.points.compareTo(a.points));
+    return [
+      'Arrive by ${_hourLabel(score.bestWindow.startHour - 1)} to settle before the bite.',
+      'Fish ${spot.target.toLowerCase()} at ${spot.name}.',
+      topDriver.first.detail,
+      hour.sample.windKph > 28
+          ? 'Keep the plan short: wind is the main comfort risk.'
+          : 'Pack for a ${hour.sample.windKph.round()} kph breeze.',
+    ];
+  }
+
+  String shareCardFor(Spot spot, DayScore score) {
+    final verdict = verdictFor(score.dayScore);
+    return [
+      'FishSignal: ${spot.name}',
+      '${score.forecast.weekdayLabel} ${score.forecast.dateLabel}',
+      'Best window: ${score.bestWindow.rangeLabel}',
+      'Bite signal: ${score.rounded}/100 (${verdict.headline})',
+      'Top target: ${spot.target}',
+      'Planning aid only - no catch guarantee.',
+    ].join('\n');
+  }
+
+  String _alertId(Spot spot, DayScore score) {
+    final date = score.forecast.date;
+    return '${spot.id}-${date.year}-${date.month}-${date.day}-${score.bestWindow.startHour}';
+  }
+
+  String _hourLabel(int hour) {
+    final wrapped = hour < 0 ? hour + 24 : hour;
+    final h = wrapped % 12 == 0 ? 12 : wrapped % 12;
+    final suffix = wrapped < 12 ? 'AM' : 'PM';
+    return '$h $suffix';
+  }
 }
+
+class TripRecommendation {
+  const TripRecommendation({
+    required this.spot,
+    required this.day,
+    required this.rhythm,
+    required this.rhythmWindow,
+  });
+
+  final Spot spot;
+  final DayScore day;
+  final TripRhythm rhythm;
+  final BiteWindow rhythmWindow;
+
+  bool get bestFitsRhythm =>
+      rhythm.allDay ||
+      (day.bestWindow.startHour >= rhythm.startHour &&
+          day.bestWindow.endHour <= rhythm.endHour);
+
+  String get rhythmLine {
+    if (rhythm.allDay) return 'You can follow the best water today.';
+    if (bestFitsRhythm) {
+      return 'This fits your ${rhythm.label.toLowerCase()} rhythm.';
+    }
+    return 'Best in your ${rhythm.label.toLowerCase()} slot: ${rhythmWindow.rangeLabel} · ${rhythmWindow.rounded}/100';
+  }
+}
+
+class _SampleSpotTemplate {
+  const _SampleSpotTemplate({
+    required this.name,
+    required this.area,
+    required this.waterType,
+    required this.target,
+    required this.accessNote,
+  });
+
+  final String name;
+  final String area;
+  final WaterType waterType;
+  final String target;
+  final String accessNote;
+}
+
+const _sampleTemplates = [
+  _SampleSpotTemplate(
+    name: 'Brighton West Pier',
+    area: 'Brighton, Sussex',
+    waterType: WaterType.saltShore,
+    target: 'Bass and smooth-hound',
+    accessNote: 'Urban shore mark with moving-water windows',
+  ),
+  _SampleSpotTemplate(
+    name: 'Avon evening bend',
+    area: 'Salisbury, Wiltshire',
+    waterType: WaterType.freshwater,
+    target: 'Barbel and chub',
+    accessNote: 'Pressure-led river session',
+  ),
+  _SampleSpotTemplate(
+    name: 'Solent drift line',
+    area: 'Portsmouth, Hampshire',
+    waterType: WaterType.saltBoat,
+    target: 'Bream and bass',
+    accessNote: 'Boat mark where tide run decides the drift',
+  ),
+];
 
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child})

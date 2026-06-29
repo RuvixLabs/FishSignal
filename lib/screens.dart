@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_state.dart';
 import 'models.dart';
@@ -17,6 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int _page = 0;
   WaterType _waterType = WaterType.saltShore;
+  TripRhythm _tripRhythm = TripRhythm.dawn;
   String? _spotId;
   bool _alerts = true;
 
@@ -27,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next(AppState state) {
-    if (_page < 3) {
+    if (_page < 4) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
@@ -37,6 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     state.completeOnboarding(
       waterType: _waterType,
       homeSpotId: _spotId ?? state.spots.first.id,
+      tripRhythm: _tripRhythm,
       alertIntent: _alerts,
     );
   }
@@ -45,7 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     _spotId ??= state.spots.first.id;
-    final buttonText = _page == 3 ? 'Show my window' : 'Continue';
+    final buttonText = _page == 4 ? 'Show my window' : 'Continue';
 
     return Scaffold(
       body: _AppBackground(
@@ -87,6 +90,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             subtitle: type.blurb,
                             selected: _waterType == type,
                             onTap: () => setState(() => _waterType = type),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    _OnboardingPanel(
+                      eyebrow: 'Trip rhythm',
+                      title: 'When can you actually get on the water?',
+                      body:
+                          'FishSignal still shows the best window, but it also calls out the strongest slot inside your real free time.',
+                      child: Column(
+                        children: TripRhythm.values.map((rhythm) {
+                          return _ChoiceTile(
+                            title: rhythm.label,
+                            subtitle: '${rhythm.blurb} · ${rhythm.windowLabel}',
+                            selected: _tripRhythm == rhythm,
+                            onTap: () => setState(() => _tripRhythm = rhythm),
                           );
                         }).toList(),
                       ),
@@ -134,7 +153,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
-                        4,
+                        5,
                         (i) => _PageDot(active: i == _page),
                       ),
                     ),
@@ -252,8 +271,10 @@ class TodayScreen extends StatelessWidget {
       );
     }
 
-    final score = state.todayFor(spot);
+    final recommendation = state.recommendationFor(spot);
+    final score = recommendation.day;
     final verdict = verdictFor(score.dayScore);
+    final savedAlert = state.alertFor(spot.id, score);
     final bestHour = score.hourScores.firstWhere(
       (h) => h.sample.hour == score.bestWindow.startHour,
       orElse: () => score.hourScores.first,
@@ -270,14 +291,30 @@ class TodayScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
       children: [
-        _TodayHeader(spot: spot),
+        _TodayHeader(spot: spot, rhythm: state.tripRhythm),
         const SizedBox(height: 18),
         _BiteHero(
           score: score,
           verdict: verdict,
-          alertOn: spot.alertEnabled,
+          recommendation: recommendation,
+          alertOn: savedAlert != null,
           onOpen: openWindow,
-          onAlert: () => state.toggleAlert(spot.id),
+          onAlert: () {
+            final saved = state.toggleWindowAlert(spot, score);
+            _showFacade(
+              context,
+              saved
+                  ? 'Saved ${score.bestWindow.rangeLabel} alert locally'
+                  : 'Removed local alert for ${score.bestWindow.rangeLabel}',
+            );
+          },
+        ),
+        const SizedBox(height: 18),
+        _TripPlanCard(
+          spot: spot,
+          recommendation: recommendation,
+          checklist: state.sessionChecklist(spot, score),
+          savedAlert: savedAlert,
         ),
         const SizedBox(height: 18),
         _SoftLabel(text: "What's driving it"),
@@ -308,6 +345,8 @@ class WindowDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final verdict = verdictFor(dayScore.dayScore);
+    final savedAlert = state.alertFor(spot.id, dayScore);
+    final checklist = state.sessionChecklist(spot, dayScore);
     final hour = dayScore.hourScores.firstWhere(
       (h) => h.sample.hour == dayScore.bestWindow.startHour,
       orElse: () => dayScore.hourScores.first,
@@ -352,6 +391,21 @@ class WindowDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const _SectionTitle(label: 'Session plan'),
+                  const SizedBox(height: 12),
+                  _SignalLine(label: 'Arrive', value: _arrivalLabel(dayScore)),
+                  _SignalLine(label: 'Target', value: spot.target),
+                  _SignalLine(label: 'Mark note', value: spot.accessNote),
+                  const SizedBox(height: 12),
+                  ...checklist.map((item) => _PlanBullet(text: item)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _Surface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const _SectionTitle(label: 'Session card'),
                   const SizedBox(height: 12),
                   Container(
@@ -375,7 +429,7 @@ class WindowDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Share facade only. Production would render this as an image card.',
+                          'Preview and copy a local share card. Production would render this as an image.',
                           style: TextStyle(color: FishColors.mistDim),
                         ),
                       ],
@@ -386,7 +440,10 @@ class WindowDetailScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _showFacade(context, 'Share card'),
+                          onPressed: () => _showShareCard(
+                            context,
+                            state.shareCardFor(spot, dayScore),
+                          ),
                           icon: const Icon(Icons.ios_share),
                           label: const Text('Share'),
                         ),
@@ -394,14 +451,25 @@ class WindowDetailScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: FilledButton.icon(
-                          onPressed: () => state.toggleAlert(spot.id),
+                          onPressed: () {
+                            final saved = state.toggleWindowAlert(
+                              spot,
+                              dayScore,
+                            );
+                            _showFacade(
+                              context,
+                              saved
+                                  ? 'Saved ${dayScore.bestWindow.rangeLabel} alert locally'
+                                  : 'Removed local window alert',
+                            );
+                          },
                           icon: Icon(
-                            spot.alertEnabled
+                            savedAlert != null
                                 ? Icons.notifications_active
                                 : Icons.notifications_outlined,
                           ),
                           label: Text(
-                            spot.alertEnabled ? 'Alert on' : 'Alert me',
+                            savedAlert != null ? 'Alert saved' : 'Alert me',
                           ),
                         ),
                       ),
@@ -435,19 +503,48 @@ class WeekPlannerScreen extends StatelessWidget {
     }
     final ranked = [...state.weekFor(spot)]
       ..sort((a, b) => b.dayScore.compareTo(a.dayScore));
+    final goDays = ranked
+        .where((d) => verdictFor(d.dayScore) == BiteVerdict.go)
+        .length;
+    final fishableDays = ranked
+        .where((d) => verdictFor(d.dayScore) != BiteVerdict.wait)
+        .length;
+    final subtitle = goDays > 0
+        ? '$goDays strong ${goDays == 1 ? 'day' : 'days'} · $fishableDays fishable for ${spot.name}'
+        : fishableDays > 0
+        ? '$fishableDays fishable ${fishableDays == 1 ? 'day' : 'days'} · pick your window for ${spot.name}'
+        : 'A quiet week at ${spot.name} · wait it out';
 
     return _PageFrame(
       title: '7-day planner',
-      subtitle: 'Best-to-worst windows for ${spot.name}',
+      subtitle: subtitle,
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-        itemBuilder: (context, index) =>
-            _WeekCard(rank: index + 1, score: ranked[index], spot: spot),
+        itemBuilder: (context, index) => _WeekCard(
+          rank: index + 1,
+          score: ranked[index],
+          spot: spot,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  WindowDetailScreen(spot: spot, dayScore: ranked[index]),
+            ),
+          ),
+        ),
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemCount: ranked.length,
       ),
     );
   }
+}
+
+String _arrivalLabel(DayScore score) {
+  final hour = score.bestWindow.startHour <= 0
+      ? score.bestWindow.startHour + 23
+      : score.bestWindow.startHour - 1;
+  final h = hour % 12 == 0 ? 12 : hour % 12;
+  final suffix = hour < 12 ? 'AM' : 'PM';
+  return '$h $suffix';
 }
 
 class SpotsScreen extends StatelessWidget {
@@ -474,6 +571,11 @@ class SpotsScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final spot = state.spots[index];
                 final active = state.activeSpot?.id == spot.id;
+                final today = state.todayFor(spot);
+                final verdict = verdictFor(today.dayScore);
+                final savedCount = state.savedAlerts
+                    .where((alert) => alert.spotId == spot.id)
+                    .length;
                 return _Surface(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,10 +600,49 @@ class SpotsScreen extends StatelessWidget {
                                     color: FishColors.mistDim,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${spot.target} · ${spot.accessNote}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: FishColors.mistDim,
+                                    height: 1.25,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           if (active) const _StatusPill(text: 'active'),
+                        ],
+                      ),
+                      if (savedCount > 0) ...[
+                        const SizedBox(height: 12),
+                        _StatusPill(
+                          text:
+                              '$savedCount saved ${savedCount == 1 ? 'window' : 'windows'}',
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _SignalPill(
+                            text: verdict.headline,
+                            color: FishColors.forVerdict(verdict),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Today ${today.rounded}/100 · best ${today.bestWindow.rangeLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: FishColors.mistDim,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 14),
@@ -558,12 +699,42 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = AppScope.of(context);
     return _PageFrame(
       title: 'More',
       subtitle: 'Trust, support and prototype boundaries',
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
         children: [
+          _Surface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SectionTitle(label: 'Local profile'),
+                const SizedBox(height: 12),
+                _SignalLine(
+                  label: 'Trip rhythm',
+                  value: state.tripRhythm.label,
+                ),
+                _SignalLine(
+                  label: 'Saved alerts',
+                  value: '${state.savedAlerts.length}',
+                ),
+                if (state.savedAlerts.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  ...state.savedAlerts
+                      .take(3)
+                      .map(
+                        (alert) => _PlanBullet(
+                          text:
+                              '${alert.spotName}: ${alert.dateLabel}, ${alert.rangeLabel} (${alert.leadLabel})',
+                        ),
+                      ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           _Surface(
             child: Column(
               children: [
@@ -871,6 +1042,7 @@ class _BiteHero extends StatelessWidget {
   const _BiteHero({
     required this.score,
     required this.verdict,
+    required this.recommendation,
     required this.alertOn,
     required this.onOpen,
     required this.onAlert,
@@ -878,6 +1050,7 @@ class _BiteHero extends StatelessWidget {
 
   final DayScore score;
   final BiteVerdict verdict;
+  final TripRecommendation recommendation;
   final bool alertOn;
   final VoidCallback onOpen;
   final VoidCallback onAlert;
@@ -958,6 +1131,16 @@ class _BiteHero extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      recommendation.rhythmLine,
+                      style: TextStyle(
+                        color: dim,
+                        fontSize: 12.5,
+                        height: 1.25,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -982,6 +1165,186 @@ class _BiteHero extends StatelessWidget {
               const SizedBox(width: 12),
               _HeroIconButton(active: alertOn, fg: fg, onTap: onAlert),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripPlanCard extends StatelessWidget {
+  const _TripPlanCard({
+    required this.spot,
+    required this.recommendation,
+    required this.checklist,
+    required this.savedAlert,
+  });
+
+  final Spot spot;
+  final TripRecommendation recommendation;
+  final List<String> checklist;
+  final SavedWindowAlert? savedAlert;
+
+  @override
+  Widget build(BuildContext context) {
+    final score = recommendation.day;
+    final rhythmWindow = recommendation.rhythmWindow;
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(child: _SectionTitle(label: 'Trip plan')),
+              if (savedAlert != null)
+                _StatusPill(text: 'alert ${savedAlert!.leadLabel}'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _MiniPlanStat(
+                  label: 'Arrive',
+                  value: _hourBefore(score.bestWindow.startHour),
+                  icon: Icons.schedule,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniPlanStat(
+                  label: 'Target',
+                  value: spot.target.split(',').first,
+                  icon: Icons.anchor,
+                ),
+              ),
+            ],
+          ),
+          if (!recommendation.bestFitsRhythm) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: FishColors.amber.withValues(alpha: 0.10),
+                border: Border.all(
+                  color: FishColors.amber.withValues(alpha: 0.26),
+                ),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.access_time_filled,
+                    size: 18,
+                    color: FishColors.amber,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'If you can only do ${recommendation.rhythm.label.toLowerCase()}, use ${rhythmWindow.rangeLabel} (${rhythmWindow.rounded}/100).',
+                      style: const TextStyle(
+                        color: FishColors.mist,
+                        height: 1.3,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          ...checklist.take(3).map((item) => _PlanBullet(text: item)),
+        ],
+      ),
+    );
+  }
+
+  static String _hourBefore(int hour) {
+    final wrapped = hour <= 0 ? hour + 23 : hour - 1;
+    final h = wrapped % 12 == 0 ? 12 : wrapped % 12;
+    final suffix = wrapped < 12 ? 'AM' : 'PM';
+    return '$h $suffix';
+  }
+}
+
+class _MiniPlanStat extends StatelessWidget {
+  const _MiniPlanStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: FishColors.ink.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: FishColors.seaBright),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: FishColors.mistDim,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: FishColors.mist,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanBullet extends StatelessWidget {
+  const _PlanBullet({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(top: 7),
+            decoration: const BoxDecoration(
+              color: FishColors.amber,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: FishColors.mistDim, height: 1.32),
+            ),
           ),
         ],
       ),
@@ -1113,9 +1476,10 @@ class _AppBackground extends StatelessWidget {
 
 /// Friendly Today header: greeting, the active mark, and the honesty chip.
 class _TodayHeader extends StatelessWidget {
-  const _TodayHeader({required this.spot});
+  const _TodayHeader({required this.spot, required this.rhythm});
 
   final Spot spot;
+  final TripRhythm rhythm;
 
   @override
   Widget build(BuildContext context) {
@@ -1155,6 +1519,16 @@ class _TodayHeader extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   height: 1.05,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${rhythm.label} · ${spot.target}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: FishColors.mistDim,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -1542,53 +1916,68 @@ class _WeekCard extends StatelessWidget {
     required this.rank,
     required this.score,
     required this.spot,
+    required this.onTap,
   });
 
   final int rank;
   final DayScore score;
   final Spot spot;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final verdict = verdictFor(score.dayScore);
-    return _Surface(
-      child: Row(
-        children: [
-          _RankBadge(rank: rank),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: _Surface(
+        child: Row(
+          children: [
+            _RankBadge(rank: rank, verdict: verdict),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${score.forecast.weekdayLabel} ${score.forecast.dateLabel}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${score.bestWindow.rangeLabel} at ${spot.name}',
+                    style: const TextStyle(color: FishColors.mistDim),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Open session plan',
+                    style: TextStyle(
+                      color: FishColors.seaBright,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${score.forecast.weekdayLabel} ${score.forecast.dateLabel}',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  '${score.rounded}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: FishColors.forVerdict(verdict),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '${score.bestWindow.rangeLabel} at ${spot.name}',
+                  verdict.headline,
                   style: const TextStyle(color: FishColors.mistDim),
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${score.rounded}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: FishColors.forVerdict(verdict),
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              Text(
-                verdict.headline,
-                style: const TextStyle(color: FishColors.mistDim),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1919,28 +2308,54 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-class _RankBadge extends StatelessWidget {
-  const _RankBadge({required this.rank});
+class _SignalPill extends StatelessWidget {
+  const _SignalPill({required this.text, required this.color});
 
-  final int rank;
+  final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        border: Border.all(color: color.withValues(alpha: 0.70)),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _RankBadge extends StatelessWidget {
+  const _RankBadge({required this.rank, required this.verdict});
+
+  final int rank;
+  final BiteVerdict verdict;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = FishColors.forVerdict(verdict);
     return Container(
       width: 42,
       height: 42,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: FishColors.ink,
-        border: Border.all(color: FishColors.inkLine),
+        color: color.withValues(alpha: 0.16),
+        border: Border.all(color: color.withValues(alpha: 0.70)),
         shape: BoxShape.circle,
       ),
       child: Text(
         '$rank',
-        style: const TextStyle(
-          color: FishColors.amber,
-          fontWeight: FontWeight.w900,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w900),
       ),
     );
   }
@@ -2154,4 +2569,52 @@ void _showFacade(BuildContext context, String message) {
   ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text('$message - prototype only.')));
+}
+
+void _showShareCard(BuildContext context, String card) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: FishColors.ink,
+    showDragHandle: true,
+    builder: (context) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Share card preview',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              _Surface(
+                child: Text(
+                  card,
+                  style: const TextStyle(
+                    color: FishColors.mist,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: card));
+                  Navigator.of(context).pop();
+                  _showFacade(context, 'Copied share card text locally');
+                },
+                icon: const Icon(Icons.copy),
+                label: const Text('Copy text'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

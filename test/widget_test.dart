@@ -9,8 +9,8 @@ void main() {
     expect(find.text('FishSignal'), findsOneWidget);
     expect(find.textContaining('best two hours'), findsOneWidget);
 
-    for (var i = 0; i < 4; i++) {
-      await tester.tap(find.text(i == 3 ? 'Show my window' : 'Continue'));
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(find.text(i == 4 ? 'Show my window' : 'Continue'));
       await tester.pumpAndSettle();
     }
 

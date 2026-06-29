@@ -41,3 +41,8 @@ The UI direction is a soft, rounded, gradient-led "golden hour over water" look 
 - The widget test (`test/widget_test.dart`) asserts `Icons.speed_outlined` on Today — the Today nav destination must have **no `selectedIcon`** (it's the selected tab, so a selectedIcon would hide the outlined one). Keep the `'mock forecast'` chip and `'Open window'` label text intact.
 - CustomPainter helper that returns `double` must return `0.0`, not `0` (a `0`/`double` ternary infers `num` and fails to compile).
 - All alpha uses `Color.withValues(alpha:)` (not the deprecated `withOpacity`).
+
+## Current Product Loop
+- Approved UI baseline: this Golden Hour system is the direction to continue, not another concept sandbox.
+- Current proof loop: onboarding profile -> active fishing mark -> pressure/tide/wind/solunar bite score -> Today window -> session plan -> exact local alert/share preview -> Week/Spots follow-through.
+- Still local-only: no Firebase, RevenueCat, AppStoreCopilot, AppRefer, Gleap, analytics, live weather/tide provider, native notification scheduling, store setup, or credentials.
